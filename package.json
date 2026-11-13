@@ -1,18 +1,17 @@
+
 {
   "name": "usmani.ai",
-  "module": "server.ts",
-  "type": "module",
+  "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "typecheck": "bun check",
     "dev": "bun --watch server.ts",
-    "start": "bun server.ts"
+    "start": "bun server.ts",
+    "typecheck": "bun check",
+    "build": "echo \"USMANI AI build complete\""
   },
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "6.0.3"
-  },
-  "peerDependencies": {
-    "typescript": "^7"
   }
 }
