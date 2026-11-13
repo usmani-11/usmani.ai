@@ -1,514 +1,1127 @@
 
+
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
 <meta name="theme-color" content="#090909">
+
 <title>USMANI AI</title>
 
+
+
 <style>
+
 :root {
+
   --bg:#090909;
+
   --panel:#111;
+
   --panel2:#181818;
+
   --gold:#d6ad55;
+
   --text:#f5f2eb;
+
   --muted:#898989;
+
   --border:#282828;
+
 }
+
 * {box-sizing:border-box}
+
 html, body {
+
   width:100%;
+
   height:100%;
+
   margin:0;
+
 }
+
 body {
+
   background:var(--bg);
+
   color:var(--text);
+
   font-family:Inter,Arial,sans-serif;
+
   height:100vh;
+
   overflow:hidden;
+
   overscroll-behavior:none;
+
 }
+
 .app {
+
   display:flex;
+
   width:100%;
+
   height:100vh;
+
   min-height:0;
+
   overflow:hidden;
+
 }
+
 .sidebar {
+
   width:260px;flex-shrink:0;background:#0e0e0e;
+
   border-right:1px solid var(--border);padding:22px 15px;
+
   display:flex;flex-direction:column;
+
 }
+
 .brand {
+
   font-size:22px;font-weight:800;letter-spacing:1px;
+
   color:var(--gold);padding:8px 10px 25px;
+
 }
+
 .brand span {color:white}
+
 .new-chat {
+
   background:var(--panel2);color:white;border:1px solid var(--border);
+
   padding:13px;border-radius:10px;text-align:left;cursor:pointer;font-size:14px;
+
 }
+
 .new-chat:hover {border-color:var(--gold)}
+
 .side-label {
+
   color:var(--muted);font-size:11px;margin:30px 10px 12px;letter-spacing:1px;
+
 }
+
 .side-item {padding:11px;border-radius:8px;color:#aaa;font-size:13px}
+
 .side-bottom {
+
   margin-top:auto;padding:15px 10px;border-top:1px solid var(--border);
+
   color:#aaa;font-size:12px;
+
 }
+
 .main {
+
   flex:1;display:flex;flex-direction:column;
+
   min-width:0;min-height:0;overflow:hidden;
+
 }
+
 .topbar {
+
   min-height:65px;border-bottom:1px solid var(--border);
+
   display:flex;align-items:center;justify-content:space-between;
+
   gap:12px;padding:0 25px;
+
 }
+
 .model-select {
+
   max-width:78%;background:var(--panel2);border:1px solid var(--border);
+
   color:white;padding:10px 13px;border-radius:8px;outline:none;cursor:pointer;
+
 }
+
 .model-select:focus {border-color:var(--gold)}
+
 .model-select optgroup {background:#181818;color:var(--gold)}
+
 .model-select option {background:#181818;color:white}
+
 .status {color:#8c8c8c;font-size:12px;white-space:nowrap}
+
 .status::before {
+
   content:"";display:inline-block;width:7px;height:7px;
+
   border-radius:50%;background:#42c77a;margin-right:7px;
+
 }
+
 .chat {
+
   flex:1;min-height:0;overflow-y:auto;
+
   overscroll-behavior:contain;
+
   -webkit-overflow-scrolling:touch;
+
   padding:35px 20px 25px;
+
 }
+
 .welcome {max-width:760px;margin:10vh auto 0;text-align:center}
+
 .logo-circle {
+
   width:65px;height:65px;border:1px solid #80652f;border-radius:20px;
+
   display:grid;place-items:center;color:var(--gold);font-size:27px;
+
   margin:0 auto 25px;background:#1b170e;
+
 }
+
 .welcome h1 {font-size:38px;margin:0 0 12px}
+
 .welcome h1 span {color:var(--gold)}
+
 .welcome p {color:var(--muted);line-height:1.7}
+
 .suggestions {
+
   display:grid;grid-template-columns:repeat(2,1fr);
+
   gap:12px;margin-top:35px;
+
 }
+
 .suggestion {
+
   background:var(--panel);border:1px solid var(--border);color:#ccc;
+
   text-align:left;padding:17px;border-radius:12px;cursor:pointer;
+
 }
+
 .suggestion:hover {border-color:var(--gold)}
+
 .messages {max-width:850px;margin:auto}
+
 .message {
+
   margin:22px 0;line-height:1.75;
+
   white-space:pre-wrap;overflow-wrap:anywhere;
+
 }
+
 .user-message {
+
   background:#1b1b1b;border:1px solid var(--border);
+
   border-radius:14px;padding:15px 18px;
+
   margin-left:auto;max-width:85%;
+
 }
+
 .ai-message {padding:10px 5px}
+
 .ai-label {
+
   color:var(--gold);font-size:12px;
+
   font-weight:bold;margin-bottom:8px;
+
 }
+
 .composer-wrap {
+
   flex:0 0 auto;
+
   padding:15px 20px max(25px, env(safe-area-inset-bottom));
+
 }
+
 .composer {
+
   width:100%;max-width:850px;margin:auto;
+
   background:#151515;border:1px solid #333;
+
   border-radius:15px;padding:12px;
+
   display:flex;align-items:flex-end;gap:10px;
+
 }
+
 .composer:focus-within {border-color:#987b40}
+
 textarea {
+
   display:block;flex:1;min-width:0;width:100%;
+
   background:transparent;color:white;border:none;outline:none;
+
   resize:none;min-height:42px;max-height:150px;
+
   padding:12px 8px;font:inherit;
+
 }
+
 textarea::placeholder {color:#777}
+
 .send {
+
   width:43px;height:43px;border:none;border-radius:10px;
+
   background:var(--gold);color:#111;font-size:20px;cursor:pointer;
+
 }
+
 .send:disabled {opacity:.4;cursor:not-allowed}
+
 .footer-note {
+
   text-align:center;color:#666;font-size:11px;margin-top:12px;
+
 }
+
 .typing {color:var(--gold);font-size:13px}
 
-/* MOBILE RESPONSIVE FIX */
-@media(max-width:700px) {
-  html, body {
-    width:100%;
-    height:100%;
-    overflow:hidden;
-  }
-  body {
-    height:100vh;
-    height:100dvh;
-  }
-  .app {
-    height:100vh;
-    height:100dvh;
-    min-height:0;
-  }
-  .sidebar {display:none}
-  .main {
-    width:100%;
-    min-width:0;
-    min-height:0;
-    height:100%;
-  }
-  .topbar {
-    flex:0 0 auto;
-    min-height:58px;
-    gap:8px;
-    padding:8px 10px;
-  }
-  .model-select {
-    min-width:0;
-    max-width:calc(100% - 78px);
-    flex:1;
-    font-size:12px;
-    padding:9px 8px;
-  }
-  .status {font-size:11px}
-  .chat {
-    flex:1 1 auto;
-    min-height:0;
-    padding:16px 12px;
-  }
-  .welcome {margin:5vh auto 0}
-  .welcome h1 {font-size:27px}
-  .welcome p {font-size:14px}
-  .suggestions {
-    grid-template-columns:1fr;
-    gap:9px;
-    margin-top:22px;
-  }
-  .suggestion {padding:14px}
-  .messages {width:100%;min-width:0}
-  .user-message {max-width:92%}
-  .composer-wrap {
-    flex:0 0 auto;
-    width:100%;
-    padding:8px 10px max(10px, env(safe-area-inset-bottom));
-    background:var(--bg);
-  }
-  .composer {
-    width:100%;
-    padding:7px;
-    gap:7px;
-    border-radius:13px;
-  }
-  textarea {
-    min-height:42px;
-    max-height:120px;
-    padding:11px 7px;
-    font-size:16px;
-    line-height:1.4;
-  }
-  .send {
-    flex:0 0 42px;
-    width:42px;
-    height:42px;
-  }
-  .footer-note {font-size:10px;margin-top:7px}
+
+
+*
+/* RESPONSIVE SIDEBAR + DEVICE LAYOUT */
+.menu-toggle {
+  display:none;
+  flex:0 0 42px;
+  width:42px;height:42px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--panel2);
+  color:var(--gold);
+  font-size:21px;
+  cursor:pointer;
 }
+.sidebar-backdrop {
+  display:none;
+}
+.sidebar {
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+@media (min-width:701px) and (max-width:1100px) {
+  .sidebar {width:230px;padding:18px 12px}
+  .topbar {padding-left:18px;padding-right:18px}
+  .chat {padding-left:18px;padding-right:18px}
+}
+@media (max-width:700px) {
+  .menu-toggle {display:inline-grid;place-items:center}
+  .sidebar {
+    display:flex;
+    position:fixed;
+    z-index:1002;
+    inset:0 auto 0 0;
+    width:min( min(84vw, 320px), 320px);
+    height:100vh;
+    height:100dvh;
+    padding:18px 14px;
+    transform:translateX(-105%);
+    transition:transform .25s ease;
+    box-shadow:12px 0 35px rgba(0,0,0,.45);
+    visibility:hidden;
+  }
+  body.sidebar-open .sidebar {
+    transform:translateX(0);
+    visibility:visible;
+  }
+  .sidebar-backdrop {
+    display:block;
+    position:fixed;
+    z-index:1001;
+    inset:0;
+    border:0;
+    padding:0;
+    background:rgba(0,0,0,.62);
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .25s ease, visibility .25s ease;
+  }
+  body.sidebar-open .sidebar-backdrop {
+    opacity:1;
+    visibility:visible;
+  }
+  .topbar {justify-content:flex-start}
+  .status {margin-left:auto}
+}
+@media (prefers-reduced-motion:reduce) {
+  .sidebar,.sidebar-backdrop {transition:none}
+}
+
+/* MOBILE RESPONSIVE FIX */*
+
+@media(max-width:700px) {
+
+  html, body {
+
+    width:100%;
+
+    height:100%;
+
+    overflow:hidden;
+
+  }
+
+  body {
+
+    height:100vh;
+
+    height:100dvh;
+
+  }
+
+  .app {
+
+    height:100vh;
+
+    height:100dvh;
+
+    min-height:0;
+
+  }
+
+  /* Sidebar is a slide-out drawer on small screens. */
+
+  .main {
+
+    width:100%;
+
+    min-width:0;
+
+    min-height:0;
+
+    height:100%;
+
+  }
+
+  .topbar {
+
+    flex:0 0 auto;
+
+    min-height:58px;
+
+    gap:8px;
+
+    padding:8px 10px;
+
+  }
+
+  .model-select {
+
+    min-width:0;
+
+    max-width:calc(100% - 78px);
+
+    flex:1;
+
+    font-size:12px;
+
+    padding:9px 8px;
+
+  }
+
+  .status {font-size:11px}
+
+  .chat {
+
+    flex:1 1 auto;
+
+    min-height:0;
+
+    padding:16px 12px;
+
+  }
+
+  .welcome {margin:5vh auto 0}
+
+  .welcome h1 {font-size:27px}
+
+  .welcome p {font-size:14px}
+
+  .suggestions {
+
+    grid-template-columns:1fr;
+
+    gap:9px;
+
+    margin-top:22px;
+
+  }
+
+  .suggestion {padding:14px}
+
+  .messages {width:100%;min-width:0}
+
+  .user-message {max-width:92%}
+
+  .composer-wrap {
+
+    flex:0 0 auto;
+
+    width:100%;
+
+    padding:8px 10px max(10px, env(safe-area-inset-bottom));
+
+    background:var(--bg);
+
+  }
+
+  .composer {
+
+    width:100%;
+
+    padding:7px;
+
+    gap:7px;
+
+    border-radius:13px;
+
+  }
+
+  textarea {
+
+    min-height:42px;
+
+    max-height:120px;
+
+    padding:11px 7px;
+
+    font-size:16px;
+
+    line-height:1.4;
+
+  }
+
+  .send {
+
+    flex:0 0 42px;
+
+    width:42px;
+
+    height:42px;
+
+  }
+
+  .footer-note {font-size:10px;margin-top:7px}
+
+}
+
+
 
 @supports (height: 100dvh) {
+
   @media(max-width:700px) {
+
     body, .app {height:100dvh}
+
   }
+
 }
+
 </style>
+
 </head>
 
+
+
 <body>
+
 <div class="app">
 
-  <aside class="sidebar">
+
+
+  <aside class="sidebar" id="sidebar">
+
     <div class="brand">USMANI <span>AI.</span></div>
+
+
 
     <button class="new-chat" onclick="newChat()">＋ &nbsp; New Chat</button>
 
+
+
     <div class="side-label">WORKSPACE</div>
+
     <div class="side-item">✦ &nbsp; AI Assistant</div>
+
     <div class="side-item">⌘ &nbsp; Coding Assistant</div>
+
     <div class="side-item">◉ &nbsp; Research</div>
+
     <div class="side-item">◌ &nbsp; Live Voice <span style="color:#777">(Coming soon)</span></div>
 
+
+
     <div class="side-bottom">
+
       USMANI AI<br><br>
+
       <span style="color:#666">Personal AI Workspace</span>
+
     </div>
+
   </aside>
+
+
+
+  <button class="sidebar-backdrop" id="sidebarBackdrop"
+    type="button" aria-label="Close navigation menu"></button>
 
   <main class="main">
 
+
+
     <header class="topbar">
+      <button class="menu-toggle" id="menuToggle" type="button"
+        aria-label="Open navigation menu" aria-expanded="false"
+        aria-controls="sidebar">☰</button>
+
       <select class="model-select" id="model">
 
+
+
         <optgroup label="FREELLMAPI - RECOMMENDED">
+
           <option value="freellm|auto">Auto - Best Available Model</option>
+
           <option value="freellm|fusion">Fusion - Multiple Models + Judge</option>
+
           <option value="freellm|auto:free-claude-code">Auto Free Claude Code</option>
+
         </optgroup>
+
+
 
         <optgroup label="CLAUDE COMPATIBLE FREE SLOTS">
+
           <option value="freellm|claude-opus-4-5">Claude Opus 4.5 Slot</option>
+
           <option value="freellm|claude-sonnet-4-5">Claude Sonnet 4.5 Slot</option>
+
           <option value="freellm|claude-haiku-4-5">Claude Haiku 4.5 Slot</option>
+
         </optgroup>
+
+
 
         <optgroup label="FREELLM - QWEN">
+
           <option value="freellm|qwen3.8-27b">Qwen 3.8 27B</option>
+
           <option value="freellm|qwen3.6-27b">Qwen 3.6 27B</option>
+
           <option value="freellm|qwen3.5-397b">Qwen 3.5 397B</option>
+
           <option value="freellm|qwen3.5-9b">Qwen 3.5 9B</option>
+
         </optgroup>
+
+
 
         <optgroup label="FREELLM - GPT">
+
           <option value="freellm|gpt-oss-120b">GPT OSS 120B</option>
+
           <option value="freellm|gpt-oss-20b">GPT OSS 20B</option>
+
         </optgroup>
+
+
 
         <optgroup label="FREELLM - NEMOTRON">
+
           <option value="freellm|nemotron-3-ultra-550b">Nemotron 3 Ultra 550B</option>
+
           <option value="freellm|nemotron-3.5-lightning">Nemotron 3.5 Lightning</option>
+
           <option value="freellm|nemotron-3-nano-30b-reasoning">Nemotron Nano 30B Reasoning</option>
+
           <option value="freellm|nemotron-3-nano-omni-reasoning">Nemotron Nano Omni Reasoning</option>
+
         </optgroup>
+
+
 
         <optgroup label="FREELLM - GEMMA">
+
           <option value="freellm|gemma-4-31b">Gemma 4 31B</option>
+
           <option value="freellm|gemma-4-26b-a4b">Gemma 4 26B A4B</option>
+
         </optgroup>
+
+
 
         <optgroup label="FREELLM - OTHER MODELS">
+
           <option value="freellm|kilo-auto">Kilo Auto</option>
+
           <option value="freellm|free-router">Free Router</option>
+
           <option value="freellm|north-mini-code">North Mini Code</option>
+
           <option value="freellm|dots3-note-preview">Dots3 Note Preview</option>
+
           <option value="freellm|lfm2.5-2.6b">LFM 2.5 2.6B</option>
+
           <option value="freellm|llama-3.3-70b">Llama 3.3 70B</option>
+
           <option value="freellm|mistral-small-3.2-24b">Mistral Small 3.2 24B</option>
+
           <option value="freellm|qwen2.5-vl-72b">Qwen 2.5 VL 72B</option>
+
           <option value="freellm|qwen3guard-gen-8b">Qwen3Guard 8B</option>
+
           <option value="freellm|qwen3guard-gen-0.6b">Qwen3Guard 0.6B</option>
+
         </optgroup>
+
+
 
         <optgroup label="ANTHROPIC - DIRECT API">
+
           <option value="claude|claude-sonnet-4-5">Claude Sonnet Direct</option>
+
         </optgroup>
+
+
 
         <optgroup label="GOOGLE GEMINI - DIRECT API">
+
           <option value="gemini|gemini-3.8-flash">Gemini 3.8 Flash</option>
+
           <option value="gemini|gemini-3.7-flash">Gemini 3.7 Flash</option>
+
         </optgroup>
+
+
 
         <optgroup label="GROQ">
+
           <option value="groq|openai/gpt-oss-20b">GPT OSS 20B</option>
+
         </optgroup>
+
+
 
         <optgroup label="OPENROUTER">
+
           <option value="openrouter|openrouter/free">OpenRouter Free</option>
+
         </optgroup>
+
+
 
         <optgroup label="COHERE">
+
           <option value="cohere|command-a-plus-05-2026">Cohere Command A+</option>
+
         </optgroup>
+
+
 
         <optgroup label="Z.AI">
+
           <option value="zai|glm-5.3">GLM 5.3</option>
+
         </optgroup>
 
+
+
         <optgroup label="SAMBANOVA">
+
           <option value="sambanova|GLM-5.3">GLM 5.3</option>
+
           <option value="sambanova|Meta-Llama-3.3-70B-Instruct">Llama 3.3 70B</option>
+
         </optgroup>
+
+
 
       </select>
 
+
+
       <div class="status" id="status">Connecting...</div>
+
     </header>
 
+
+
     <section class="chat" id="chat">
+
       <div class="welcome" id="welcome">
+
         <div class="logo-circle">✦</div>
+
+
 
         <h1>Welcome to <span>USMANI AI</span></h1>
 
+
+
         <p>
+
           Your personal AI workspace.<br>
+
           Ask anything, create something, or explore an idea.
+
         </p>
 
+
+
         <div class="suggestions">
+
           <button class="suggestion" onclick="usePrompt('Explain artificial intelligence in simple words.')">
+
             ✦ &nbsp; Explain AI simply
+
           </button>
+
+
 
           <button class="suggestion" onclick="usePrompt('Help me build a professional website.')">
+
             ⌘ &nbsp; Build a website
+
           </button>
+
+
 
           <button class="suggestion" onclick="usePrompt('Give me five creative business ideas.')">
+
             ◈ &nbsp; Creative ideas
+
           </button>
+
+
 
           <button class="suggestion" onclick="usePrompt('Teach me something interesting today.')">
+
             ◎ &nbsp; Teach me something
+
           </button>
+
         </div>
+
       </div>
+
+
 
       <div class="messages" id="messages"></div>
+
     </section>
 
+
+
     <div class="composer-wrap">
+
       <div class="composer">
+
         <textarea id="prompt" placeholder="Message USMANI AI..." rows="1"></textarea>
+
         <button class="send" id="send" onclick="sendMessage()">↑</button>
+
       </div>
+
+
 
       <div class="footer-note">
+
         USMANI AI can make mistakes. Check important information.
+
       </div>
+
     </div>
 
+
+
   </main>
+
 </div>
 
+
+
 <script>
+
 const promptBox = document.getElementById("prompt");
+
 const messages = document.getElementById("messages");
+
 const chat = document.getElementById("chat");
+
 const welcome = document.getElementById("welcome");
+
 const sendButton = document.getElementById("send");
+
 const statusBox = document.getElementById("status");
+
 const modelSelect = document.getElementById("model");
 
-async function checkServer() {
-  try {
-    const response = await fetch("/api/health");
-    const data = await response.json();
-    statusBox.textContent = data.status === "online" ? "Online" : "Offline";
-  } catch {
-    statusBox.textContent = "Offline";
-  }
+const menuToggle = document.getElementById("menuToggle");
+const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+
+function setSidebarOpen(open) {
+  document.body.classList.toggle("sidebar-open", open);
+  menuToggle.setAttribute("aria-expanded", String(open));
+  menuToggle.setAttribute(
+    "aria-label",
+    open ? "Close navigation menu" : "Open navigation menu"
+  );
+  menuToggle.textContent = open ? "✕" : "☰";
 }
+
+menuToggle.addEventListener("click", () => {
+  setSidebarOpen(!document.body.classList.contains("sidebar-open"));
+});
+sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") setSidebarOpen(false);
+});
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 700) setSidebarOpen(false);
+});
+
+
+
+
+async function checkServer() {
+
+  try {
+
+    const response = await fetch("/api/health");
+
+    const data = await response.json();
+
+    statusBox.textContent = data.status === "online" ? "Online" : "Offline";
+
+  } catch {
+
+    statusBox.textContent = "Offline";
+
+  }
+
+}
+
+
 
 checkServer();
 
+
+
 function usePrompt(text) {
+
   promptBox.value = text;
+
   sendMessage();
+
 }
+
+
 
 function addMessage(text, type) {
+
   const div = document.createElement("div");
 
+
+
   div.className = "message " +
+
     (type === "user" ? "user-message" : "ai-message");
 
+
+
   if (type === "ai") {
+
     const label = document.createElement("div");
+
     label.className = "ai-label";
+
     label.textContent = "USMANI AI";
+
     div.appendChild(label);
+
   }
 
+
+
   const content = document.createElement("div");
+
   content.textContent = text;
+
   div.appendChild(content);
+
   messages.appendChild(div);
+
   chat.scrollTop = chat.scrollHeight;
 
+
+
   return div;
+
 }
 
+
+
 async function sendMessage() {
+
   const message = promptBox.value.trim();
+
+
 
   if (!message || sendButton.disabled) return;
 
+
+
   const selectedModel = modelSelect.value;
 
+
+
   welcome.style.display = "none";
+
   addMessage(message, "user");
 
+
+
   promptBox.value = "";
+
   promptBox.style.height = "42px";
+
   sendButton.disabled = true;
 
+
+
   const loading = addMessage("Thinking...", "ai");
+
   loading.querySelector("div:last-child").className = "typing";
 
+
+
   try {
+
     const response = await fetch("/api/chat", {
+
       method: "POST",
+
       headers: {"Content-Type":"application/json"},
+
       body: JSON.stringify({
+
         message: message,
+
         model: selectedModel
+
       })
+
     });
 
+
+
     const data = await response.json();
+
     loading.remove();
+
+
 
     if (!response.ok) {
+
       addMessage(data.error || "Something went wrong.", "ai");
+
     } else {
+
       addMessage(data.answer || "No response received.", "ai");
+
     }
 
+
+
   } catch (error) {
+
     loading.remove();
+
     addMessage(
+
       "Server se connection nahi ho saka. Check karein ke server chal raha hai.",
+
       "ai"
+
     );
 
+
+
   } finally {
+
     sendButton.disabled = false;
+
     promptBox.focus();
+
   }
+
 }
+
+
 
 function newChat() {
+  setSidebarOpen(false);
+
   messages.innerHTML = "";
+
   welcome.style.display = "block";
+
   promptBox.value = "";
+
   promptBox.focus();
+
 }
 
+
+
 promptBox.addEventListener("keydown", (event) => {
+
   if (event.key === "Enter" && !event.shiftKey) {
+
     event.preventDefault();
+
     sendMessage();
+
   }
+
 });
+
+
 
 promptBox.addEventListener("input", () => {
+
   promptBox.style.height = "42px";
+
   promptBox.style.height = Math.min(promptBox.scrollHeight, 150) + "px";
+
 });
+
 </script>
 
+
+
 </body>
+
 </html>
