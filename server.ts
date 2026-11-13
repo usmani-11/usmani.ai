@@ -1,4 +1,7 @@
 
+import express from "express";
+import path from "node:path";
+
 type ChatRequestBody = {
   message?: unknown;
   model?: unknown;
@@ -10,8 +13,14 @@ type ApiResult = {
   [key: string]: unknown;
 };
 
-const PORT = Number(Bun.env.PORT || 3000);
-const html = Bun.file("public/index.html");
+const PORT = Number(process.env.PORT || 3000);
+const app = express();
+app.use(express.json({ limit: "1mb" }));
+
+// Local Bun development serves public files here. Vercel serves public/ as static assets.
+if (!process.env.VERCEL) {
+  app.use(express.static(path.join(process.cwd(), "public")));
+}
 
 const providers = {
   claude: {
@@ -175,7 +184,7 @@ async function askProvider(
   model: string,
   message: string
 ): Promise<string> {
-  const apiKey = Bun.env[providers[provider].key];
+  const apiKey = process.env[providers[provider].key];
 
   if (!apiKey) {
     throw new Error(`${provider} ki API key .env mein nahi mili.`);
@@ -190,7 +199,7 @@ async function askProvider(
   // FREELLM API GATEWAY
   if (provider === "freellm") {
     const baseURL = (
-      Bun.env.FREELLM_BASE_URL ||
+      process.env.FREELLM_BASE_URL ||
       "http://127.0.0.1:31415/v1"
     ).replace(/\/+$/, "");
 
@@ -350,113 +359,84 @@ async function askProvider(
   throw new Error("Unknown provider.");
 }
 
-Bun.serve({
-  port: PORT,
+app.get("/api/health", (_req, res) => {
+  const status: Record<string, boolean> = {};
 
-  async fetch(req) {
-    const url = new URL(req.url);
+  for (const [name, config] of Object.entries(providers)) {
+    status[name] = Boolean(process.env[config.key]);
+  }
 
-    if (url.pathname === "/api/health") {
-      const status: Record<string, boolean> = {};
-
-      for (const [name, config] of Object.entries(providers)) {
-        status[name] = Boolean(Bun.env[config.key]);
-      }
-
-      return Response.json({
-        status: "online",
-        app: "USMANI AI",
-        providers: status,
-      });
-    }
-
-    if (url.pathname === "/api/chat" && req.method === "POST") {
-      try {
-        const body = (await req.json()) as ChatRequestBody;
-
-        const message =
-          typeof body.message === "string"
-            ? body.message.trim()
-            : "";
-
-        const selected =
-          typeof body.model === "string"
-            ? body.model.trim()
-            : "";
-
-        if (!message) {
-          return Response.json(
-            { error: "Message empty hai." },
-            { status: 400 }
-          );
-        }
-
-        const separator = selected.indexOf("|");
-
-        let provider: string;
-        let model: string;
-
-        if (separator > 0) {
-          provider = selected.slice(0, separator);
-          model = selected.slice(separator + 1);
-        } else if (selected.startsWith("gemini-")) {
-          provider = "gemini";
-          model = selected;
-        } else {
-          provider = "claude";
-          model = selected || "claude-sonnet-4-5";
-        }
-
-        if (!(provider in providers)) {
-          return Response.json(
-            { error: "Selected provider supported nahi hai." },
-            { status: 400 }
-          );
-        }
-
-        const answer = await askProvider(
-          provider as ProviderName,
-          model,
-          message
-        );
-
-        return Response.json({
-          answer,
-          provider,
-          model,
-        });
-      } catch (error) {
-        console.error("Chat API Error:", error);
-
-        return Response.json(
-          {
-            error:
-              error instanceof Error
-                ? error.message
-                : "Server request failed.",
-          },
-          { status: 500 }
-        );
-      }
-    }
-
-    if (url.pathname === "/" || url.pathname === "/index.html") {
-      return new Response(html, {
-        headers: {
-          "Content-Type": "text/html; charset=utf-8",
-        },
-      });
-    }
-
-    if (url.pathname.startsWith("/api/")) {
-      return Response.json(
-        { error: "API route not found." },
-        { status: 404 }
-      );
-    }
-
-    return new Response("Not Found", { status: 404 });
-  },
+  return res.status(200).json({
+    status: "online",
+    app: "USMANI AI",
+    providers: status,
+  });
 });
 
-console.log(`USMANI AI running at http://localhost:${PORT}`);
+app.post("/api/chat", async (req, res) => {
+  try {
+    const body = (req.body || {}) as ChatRequestBody;
+
+    const message =
+      typeof body.message === "string" ? body.message.trim() : "";
+
+    const selected =
+      typeof body.model === "string" ? body.model.trim() : "";
+
+    if (!message) {
+      return res.status(400).json({ error: "Message empty hai." });
+    }
+
+    const separator = selected.indexOf("|");
+
+    let provider: string;
+    let model: string;
+
+    if (separator > 0) {
+      provider = selected.slice(0, separator);
+      model = selected.slice(separator + 1);
+    } else if (selected.startsWith("gemini-")) {
+      provider = "gemini";
+      model = selected;
+    } else {
+      provider = "claude";
+      model = selected || "claude-sonnet-4-5";
+    }
+
+    if (!(provider in providers)) {
+      return res
+        .status(400)
+        .json({ error: "Selected provider supported nahi hai." });
+    }
+
+    const answer = await askProvider(
+      provider as ProviderName,
+      model,
+      message
+    );
+
+    return res.status(200).json({ answer, provider, model });
+  } catch (error) {
+    console.error("Chat API Error:", error);
+
+    return res.status(500).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : "Server request failed.",
+    });
+  }
+});
+
+app.all("/api/*path", (_req, res) => {
+  return res.status(404).json({ error: "API route not found." });
+});
+
+// Vercel imports this Express app. Locally, Bun starts the same app.
+export default app;
+
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`USMANI AI running at http://localhost:${PORT}`);
+  });
+}
