@@ -1,4 +1,3 @@
-
 import express from "express";
 import path from "node:path";
 
@@ -17,10 +16,13 @@ const PORT = Number(process.env.PORT || 3000);
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 
-// Local Bun development serves public files here. Vercel serves public/ as static assets.
-if (!process.env.VERCEL) {
-  app.use(express.static(path.join(process.cwd(), "public")));
-}
+// Serve the public folder as static files (local and Vercel).
+app.use(express.static(path.join(process.cwd(), "public")));
+
+// Home page: always send index.html.
+app.get("/", (_req, res) => {
+  return res.sendFile(path.join(process.cwd(), "public", "index.html"));
+});
 
 const providers = {
   claude: {
