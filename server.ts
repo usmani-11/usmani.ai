@@ -1,3 +1,4 @@
+
 import express from "express";
 import path from "node:path";
 
@@ -14,12 +15,10 @@ type ApiResult = {
 
 const PORT = Number(process.env.PORT || 3000);
 const app = express();
-app.use(express.json({ limit: "1mb" }));
 
-// Serve the public folder as static files (local and Vercel).
+app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(process.cwd(), "public")));
 
-// Home page: always send index.html.
 app.get("/", (_req, res) => {
   return res.sendFile(path.join(process.cwd(), "public", "index.html"));
 });
@@ -93,16 +92,10 @@ type ProviderName = keyof typeof providers;
 function getError(data: ApiResult): string {
   if (typeof data.error === "string") return data.error;
 
-  const error: unknown = data.error;
+  const error = data.error;
 
-  if (
-    error !== null &&
-    typeof error === "object" &&
-    "message" in error
-  ) {
-    return String(
-      (error as { message: unknown }).message
-    );
+  if (error !== null && typeof error === "object" && "message" in error) {
+    return String((error as { message: unknown }).message);
   }
 
   return "Provider API request failed.";
@@ -114,18 +107,18 @@ async function readJson(response: Response): Promise<ApiResult> {
 
 async function safeFetch(
   url: string,
-  options: RequestInit
+  options: RequestInit,
+  timeout = 30000
 ): Promise<Response> {
   try {
     return await fetch(url, {
       ...options,
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(timeout),
     });
   } catch (error) {
     if (error instanceof Error && error.name === "TimeoutError") {
-      throw new Error("Request timed out. 30 seconds baad dobara try karein.");
+      throw new Error("Request timed out. Dobara try karein.");
     }
-
     throw error;
   }
 }
@@ -166,11 +159,7 @@ async function openAIRequest(
   if (Array.isArray(content)) {
     return content
       .map((part) => {
-        if (
-          part &&
-          typeof part === "object" &&
-          "text" in part
-        ) {
+        if (part && typeof part === "object" && "text" in part) {
           return String(part.text);
         }
         return "";
@@ -192,17 +181,13 @@ async function askProvider(
     throw new Error(`${provider} ki API key .env mein nahi mili.`);
   }
 
-  if (
-    !(providers[provider].models as readonly string[]).includes(model)
-  ) {
+  if (!(providers[provider].models as readonly string[]).includes(model)) {
     throw new Error("Selected model supported nahi hai.");
   }
 
-  // FREELLM API GATEWAY
   if (provider === "freellm") {
     const baseURL = (
-      process.env.FREELLM_BASE_URL ||
-      "http://127.0.0.1:31415/v1"
+      process.env.FREELLM_BASE_URL || "http://127.0.0.1:31415/v1"
     ).replace(/\/+$/, "");
 
     return openAIRequest(
@@ -213,7 +198,6 @@ async function askProvider(
     );
   }
 
-  // CLAUDE
   if (provider === "claude") {
     const response = await safeFetch(
       "https://api.anthropic.com/v1/messages",
@@ -233,7 +217,6 @@ async function askProvider(
     );
 
     const data = await readJson(response);
-
     if (!response.ok) throw new Error(getError(data));
 
     const content = data.content as
@@ -246,7 +229,6 @@ async function askProvider(
       .join("\n");
   }
 
-  // GEMINI
   if (provider === "gemini") {
     const response = await safeFetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
@@ -257,26 +239,16 @@ async function askProvider(
           "x-goog-api-key": apiKey,
         },
         body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: message }],
-            },
-          ],
+          contents: [{ role: "user", parts: [{ text: message }] }],
         }),
       }
     );
 
     const data = await readJson(response);
-
     if (!response.ok) throw new Error(getError(data));
 
     const candidates = data.candidates as
-      | Array<{
-          content?: {
-            parts?: Array<{ text?: string }>;
-          };
-        }>
+      | Array<{ content?: { parts?: Array<{ text?: string }> } }>
       | undefined;
 
     return (candidates?.[0]?.content?.parts || [])
@@ -284,7 +256,6 @@ async function askProvider(
       .join("\n");
   }
 
-  // GROQ
   if (provider === "groq") {
     return openAIRequest(
       "https://api.groq.com/openai/v1/chat/completions",
@@ -294,7 +265,6 @@ async function askProvider(
     );
   }
 
-  // OPENROUTER
   if (provider === "openrouter") {
     return openAIRequest(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -302,31 +272,26 @@ async function askProvider(
       model,
       message,
       {
-        "HTTP-Referer": "http://localhost:3000",
+        "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
         "X-Title": "USMANI AI",
       }
     );
   }
 
-  // COHERE
   if (provider === "cohere") {
-    const response = await safeFetch(
-      "https://api.cohere.com/v2/chat",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: "user", content: message }],
-        }),
-      }
-    );
+    const response = await safeFetch("https://api.cohere.com/v2/chat", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: message }],
+      }),
+    });
 
     const data = await readJson(response);
-
     if (!response.ok) throw new Error(getError(data));
 
     const result = data.message as
@@ -338,7 +303,6 @@ async function askProvider(
       .join("\n");
   }
 
-  // Z.AI
   if (provider === "zai") {
     return openAIRequest(
       "https://api.z.ai/api/paas/v4/chat/completions",
@@ -348,7 +312,6 @@ async function askProvider(
     );
   }
 
-  // SAMBANOVA
   if (provider === "sambanova") {
     return openAIRequest(
       "https://api.sambanova.ai/v1/chat/completions",
@@ -361,6 +324,7 @@ async function askProvider(
   throw new Error("Unknown provider.");
 }
 
+/* HEALTH CHECK */
 app.get("/api/health", (_req, res) => {
   const status: Record<string, boolean> = {};
 
@@ -372,16 +336,16 @@ app.get("/api/health", (_req, res) => {
     status: "online",
     app: "USMANI AI",
     providers: status,
+    imageGeneration: true,
   });
 });
 
+/* CHAT API */
 app.post("/api/chat", async (req, res) => {
   try {
     const body = (req.body || {}) as ChatRequestBody;
-
     const message =
       typeof body.message === "string" ? body.message.trim() : "";
-
     const selected =
       typeof body.model === "string" ? body.model.trim() : "";
 
@@ -390,7 +354,6 @@ app.post("/api/chat", async (req, res) => {
     }
 
     const separator = selected.indexOf("|");
-
     let provider: string;
     let model: string;
 
@@ -406,9 +369,9 @@ app.post("/api/chat", async (req, res) => {
     }
 
     if (!(provider in providers)) {
-      return res
-        .status(400)
-        .json({ error: "Selected provider supported nahi hai." });
+      return res.status(400).json({
+        error: "Selected provider supported nahi hai.",
+      });
     }
 
     const answer = await askProvider(
@@ -423,18 +386,146 @@ app.post("/api/chat", async (req, res) => {
 
     return res.status(500).json({
       error:
-        error instanceof Error
-          ? error.message
-          : "Server request failed.",
+        error instanceof Error ? error.message : "Server request failed.",
     });
   }
 });
 
+/* FREE AI IMAGE GENERATION - AI HORDE */
+app.post("/api/image", async (req, res) => {
+  try {
+    const prompt =
+      typeof req.body?.prompt === "string"
+        ? req.body.prompt.trim()
+        : "";
+
+    if (!prompt) {
+      return res.status(400).json({ error: "Image prompt empty hai." });
+    }
+
+    if (prompt.length > 1500) {
+      return res.status(400).json({ error: "Prompt bohat lamba hai." });
+    }
+
+    const apiKey = process.env.AI_HORDE_API_KEY || "0000000000";
+
+    const submitResponse = await safeFetch(
+      "https://aihorde.net/api/v2/generate/async",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: apiKey,
+          "Client-Agent": "USMANI-AI:1.0:contact",
+        },
+        body: JSON.stringify({
+          prompt,
+          params: {
+            n: 1,
+            width: 512,
+            height: 512,
+            steps: 25,
+            sampler_name: "k_euler",
+          },
+          censor_nsfw: true,
+          trusted_workers: false,
+        }),
+      },
+      30000
+    );
+
+    const submitData = await submitResponse.json() as {
+      id?: string;
+      message?: string;
+    };
+
+    if (!submitResponse.ok || !submitData.id) {
+      throw new Error(
+        submitData.message || "Image request submit nahi ho saki."
+      );
+    }
+
+    const jobId = submitData.id;
+    const deadline = Date.now() + 180000;
+
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      const checkResponse = await safeFetch(
+        `https://aihorde.net/api/v2/generate/check/${jobId}`,
+        {
+          headers: {
+            apikey: apiKey,
+            "Client-Agent": "USMANI-AI:1.0:contact",
+          },
+        },
+        20000
+      );
+
+      const checkData = await checkResponse.json() as {
+        done?: boolean;
+        faulted?: boolean;
+        wait_time?: number;
+      };
+
+      if (!checkResponse.ok) {
+        throw new Error("Image generation status check failed.");
+      }
+
+      if (checkData.faulted) {
+        throw new Error("Image generation failed. Dobara try karein.");
+      }
+
+      if (checkData.done) {
+        const statusResponse = await safeFetch(
+          `https://aihorde.net/api/v2/generate/status/${jobId}`,
+          {
+            headers: {
+              apikey: apiKey,
+              "Client-Agent": "USMANI-AI:1.0:contact",
+            },
+          },
+          20000
+        );
+
+        const statusData = await statusResponse.json() as {
+          generations?: Array<{ img?: string; seed?: number }>;
+        };
+
+        const imageUrl = statusData.generations?.[0]?.img;
+
+        if (!statusResponse.ok || !imageUrl) {
+          throw new Error("Generated image nahi mili.");
+        }
+
+        return res.status(200).json({
+          success: true,
+          image: imageUrl,
+          seed: statusData.generations?.[0]?.seed,
+        });
+      }
+    }
+
+    return res.status(504).json({
+      error: "Free image queue mein time lag raha hai. Dobara try karein.",
+    });
+  } catch (error) {
+    console.error("Image API Error:", error);
+
+    return res.status(500).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : "Image generation request failed.",
+    });
+  }
+});
+
+/* API 404 */
 app.all("/api/*path", (_req, res) => {
   return res.status(404).json({ error: "API route not found." });
 });
 
-// Vercel imports this Express app. Locally, Bun starts the same app.
 export default app;
 
 if (!process.env.VERCEL) {
