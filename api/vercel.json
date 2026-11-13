@@ -1,8 +1,4 @@
+
 {
-  "outputDirectory": "public",
-  "functions": {
-    "api/*.ts": {
-      "maxDuration": 60
-    }
-  }
+  "bunVersion": "1.x"
 }
